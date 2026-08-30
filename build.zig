@@ -1,20 +1,43 @@
 const std = @import("std");
 
-pub fn build(b: *std.build.Builder) void {
-    // Use the standard release options helper from std.build (Zig 0.11+)
-    const mode = std.build.standardReleaseOptions(b);
+pub fn build(b: *std.Build) void {
+    // 1. Obtener target y nivel de optimización desde la línea de comandos
+    // (Ej: -Dtarget=x86_64-linux -Doptimize=ReleaseFast)
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
 
-    const exe = b.addExecutable("gogh", "src/main.zig");
-    exe.setBuildMode(mode);
+    // 2. Definir el ejecutable
+    // Nota: En Zig 0.11 se usa b.path("...") para resolver rutas relativas
+    const exe = b.addExecutable(.{
+        .name = "gogh",
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
 
-    // Add the C wrapper (assumes the file exists in the repo)
-    exe.addCSourceFile("src/bindings/thorvg_c_wrapper.c", &.{});
+    // -------------------------------------------------------------
+    // Integración de C / C Wrapper
+    // -------------------------------------------------------------
+    // Enlazar la biblioteca estándar de C (si tu wrapper usa stdlib.h, printf, etc.)
+    exe.linkLibC();
 
-    // Include headers from the Thorvg submodule
-    exe.includeDirs += .{"third_party/thorvg/include"};
+    // Añadir el archivo fuente en C
+    exe.addCSourceFile(.{
+        .file = b.path("src/wrapper.c"),
+        .flags = &.{"-std=c99"}, // Opcional: flags del compilador C
+    });
 
-    // Link with thorvg (adjust name/path if the library builds to a different name)
-    exe.linkSystemLibrary("thorvg");
+    // Añadir directorio de cabeceras (.h) si las necesitas desde Zig o C
+    exe.addIncludePath(b.path("src/include"));
+    // -------------------------------------------------------------
 
-    exe.install();
+    // 3. Registrar la instalación en el directorio final (zig-out/bin)
+    b.installArtifact(exe);
+
+    // 4. Paso opcional para ejecutar la app con `zig build run`
+    const run_cmd = b.addRunArtifact(exe);
+    run_cmd.step.dependOn(b.getInstallStep());
+
+    const run_step = b.step("run", "Ejecutar la aplicación");
+    run_step.dependOn(&run_cmd.step);
 }
