@@ -22,7 +22,6 @@ pub fn build(b: *std.Build) void {
 
     var found_wrapper = false;
     for (wrapper_candidates) |p| {
-        // En Zig 0.11, std.fs.cwd().access(...) es preferible para verificar existencia de archivos
         if (std.fs.cwd().access(p, .{})) |_| {
             exe.addCSourceFile(.{
                 .file = .{ .path = p },
@@ -30,7 +29,7 @@ pub fn build(b: *std.Build) void {
             });
             found_wrapper = true;
             break;
-        } catch |_| {} // El control de errores con |_| evita el 'unused capture'
+        } else |_| {} // Sintaxis correcta en lugar de 'catch'
     }
 
     if (!found_wrapper) {
@@ -41,7 +40,7 @@ pub fn build(b: *std.Build) void {
     const thorvg_include = "third_party/thorvg/include";
     if (std.fs.cwd().access(thorvg_include, .{})) |_| {
         exe.addIncludePath(.{ .path = thorvg_include });
-    } catch |_| {}
+    } else |_| {} // Sintaxis correcta en lugar de 'catch'
 
     // Enlazar librería del sistema
     exe.linkSystemLibrary("thorvg");
