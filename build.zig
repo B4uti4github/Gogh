@@ -1,19 +1,19 @@
 const std = @import("std");
-const Builder = std.build.Builder;
 
-pub fn build(b: *Builder) void {
+pub fn build(b: *std.build.Builder) void {
+    // Use the standard release options helper from std.build (Zig 0.11+)
     const mode = std.build.standardReleaseOptions(b);
+
     const exe = b.addExecutable("gogh", "src/main.zig");
     exe.setBuildMode(mode);
 
-    // Añadir el wrapper C para enlazar con Thorvg (si el submódulo está inicializado)
+    // Add the C wrapper (assumes the file exists in the repo)
     exe.addCSourceFile("src/bindings/thorvg_c_wrapper.c", &.{});
 
-    // Incluir headers del submódulo (si existen)
+    // Include headers from the Thorvg submodule
     exe.includeDirs += .{"third_party/thorvg/include"};
 
-    // Intentar linkear con la librería thorvg (suponiendo libthorvg.a / libthorvg.so disponible
-    // en ruta de link o en third_party/thorvg/build). Ajustar según el nombre final de la librería.
+    // Link with thorvg (adjust name/path if the library builds to a different name)
     exe.linkSystemLibrary("thorvg");
 
     exe.install();
