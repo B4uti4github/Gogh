@@ -18,7 +18,17 @@ jobs:
         run: |
           ./scripts/setup-submodules.sh
 
-      - name: Install dependencies
+      - name: Install dependencies (cmake, ninja, build tools and libs for Thorvg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential pkg-config libpng-dev libjpeg-dev libwebp-dev
+
+      - name: Build Thorvg from submodule (if CMakeLists present)
+        run: |
+          chmod +x ./scripts/build-thorvg.sh
+          ./scripts/build-thorvg.sh || true
+
+      - name: Install Zig
         run: |
           set -e
           ZIG_VER=0.11.0
@@ -26,27 +36,10 @@ jobs:
           tar -xf zig.tar.xz
           echo "ZIG=$(pwd)/zig-linux-x86_64-0.11.0" >> $GITHUB_ENV
 
-      - name: Optional: build Thorvg (requires cmake, ninja)
-        run: |
-          echo "Intentando build de Thorvg (si el submódulo provee CMakeLists). Si falla, ignorar y continuar con build principal."
-          set -e || true
-          if [ -d "third_party/thorvg" ]; then
-            if [ -f "third_party/thorvg/CMakeLists.txt" ]; then
-              sudo apt-get update && sudo apt-get install -y cmake ninja-build build-essential
-              mkdir -p third_party/thorvg/build
-              pushd third_party/thorvg/build
-              cmake -G Ninja ..
-              ninja || true
-              popd
-            else
-              echo "third_party/thorvg no tiene CMakeLists.txt en la raiz — saltando build automático."
-            fi
-          fi
-
       - name: Build with Zig
         run: |
-          $ZIG/bin/zig build || true
+          $ZIG/bin/zig build
 
-      - name: List tree
+      - name: List artifacts
         run: |
           ls -la

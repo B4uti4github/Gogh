@@ -6,14 +6,14 @@ pub fn build(b: *Builder) void {
     exe.setBuildMode(mode);
 
     // Añadir el wrapper C para enlazar con Thorvg (si el submódulo está inicializado)
-    // Ajustá la ruta si tu layout de submódulo difiere.
     exe.addCSourceFile("src/bindings/thorvg_c_wrapper.c", &.{});
 
     // Incluir headers del submódulo (si existen)
-    // exe.includeDirs += .{"third_party/thorvg/include"};
+    exe.includeDirs += .{"third_party/thorvg/include"};
 
-    // Si Thorvg requiere link a librerías del sistema, añadirlas aquí.
-    // exe.linkSystemLibrary("pthread");
+    // Intentar linkear con la librería thorvg (suponiendo libthorvg.a / libthorvg.so disponible
+    // en ruta de link o en third_party/thorvg/build). Ajustar según el nombre final de la librería.
+    exe.linkSystemLibrary("thorvg");
 
     exe.install();
 }
