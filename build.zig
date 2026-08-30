@@ -1,7 +1,8 @@
-const Builder = @import("std").build.Builder;
+const std = @import("std");
+const Builder = std.build.Builder;
 
 pub fn build(b: *Builder) void {
-    const mode = b.standardReleaseOptions();
+    const mode = std.build.standardReleaseOptions(b);
     const exe = b.addExecutable("gogh", "src/main.zig");
     exe.setBuildMode(mode);
 
