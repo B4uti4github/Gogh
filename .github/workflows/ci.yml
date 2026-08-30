@@ -49,7 +49,7 @@ jobs:
           fi
 
       - name: Setup Zig
-        uses: nim-lang/setup-zig@v1
+        uses: ziglang/setup-zig@v1
         with:
           version: '0.11.0'
 
