@@ -37,7 +37,7 @@ pub fn build(b: *std.build.Builder) void {
     var found_wrapper = false;
     for (wrapper_candidates) |p| {
         const stat_res = cwd.stat(p);
-        if (stat_res) | _meta | {
+        if (stat_res) | _ | {
             exe.addCSourceFile(p, &.{});
             found_wrapper = true;
             break;
