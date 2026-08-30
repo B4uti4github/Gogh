@@ -14,6 +14,18 @@ jobs:
           submodules: true
           fetch-depth: 0
 
+      - name: Ensure submodule directory exists (fallback to clone if needed)
+        run: |
+          if [ ! -d "third_party/thorvg" ]; then
+            echo "third_party/thorvg not present — cloning directly from upstream"
+            git clone --depth 1 https://github.com/thorvg/thorvg third_party/thorvg
+          else
+            echo "third_party/thorvg exists"
+          fi
+          # Attempt a submodule init/update as well
+          git submodule sync --recursive || true
+          git submodule update --init --recursive || true
+
       - name: Ensure setup script is executable and run it
         run: |
           chmod +x ./scripts/setup-submodules.sh || true
