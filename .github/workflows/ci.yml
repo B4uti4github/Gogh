@@ -42,11 +42,20 @@ jobs:
 
       - name: Export include/lib paths for Thorvg
         run: |
-          if [ -d "third_party/thorvg/build" ]; then
-            echo "CPATH=$(pwd)/third_party/thorvg/include" >> $GITHUB_ENV
-            echo "LIBRARY_PATH=$(pwd)/third_party/thorvg/build" >> $GITHUB_ENV
-            echo "LD_LIBRARY_PATH=$(pwd)/third_party/thorvg/build" >> $GITHUB_ENV
-          fi
+          # Export paths to be used by subsequent steps via GITHUB_ENV
+          # Do this unconditionally so subsequent steps can rely on these vars.
+          echo "CPATH=$(pwd)/third_party/thorvg/include" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=$(pwd)/third_party/thorvg/build" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$(pwd)/third_party/thorvg/build" >> $GITHUB_ENV
+
+      - name: Debug: list thorvg build artifacts and env
+        run: |
+          echo "--- Env vars available in this step ---"
+          echo "CPATH=$CPATH"
+          echo "LIBRARY_PATH=$LIBRARY_PATH"
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+          echo "--- List third_party/thorvg/build ---"
+          ls -la third_party/thorvg/build || true
 
       - name: Setup Zig
         uses: mlugg/setup-zig@v1
@@ -54,11 +63,11 @@ jobs:
           version: '0.11.0'
 
       - name: Build with Zig
-        env:
-          CPATH: ${{ env.CPATH }}
-          LIBRARY_PATH: ${{ env.LIBRARY_PATH }}
-          LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}
         run: |
+          # Show environment available to zig and run the build.
+          echo "CPATH=$CPATH"
+          echo "LIBRARY_PATH=$LIBRARY_PATH"
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
           zig build
 
       - name: List artifacts
