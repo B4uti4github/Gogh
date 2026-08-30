@@ -14,8 +14,9 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Initialize submodules (redundant with checkout if submodules:true)
+      - name: Ensure setup script is executable and run it
         run: |
+          chmod +x ./scripts/setup-submodules.sh || true
           ./scripts/setup-submodules.sh
 
       - name: Install dependencies (cmake, ninja, build tools and libs for Thorvg)
@@ -23,10 +24,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build build-essential pkg-config libpng-dev libjpeg-dev libwebp-dev
 
-      - name: Build Thorvg from submodule (if CMakeLists present)
+      - name: Ensure build script is executable and build Thorvg from submodule (if CMakeLists present)
         run: |
-          chmod +x ./scripts/build-thorvg.sh
-          ./scripts/build-thorvg.sh || true
+          chmod +x ./scripts/build-thorvg.sh || true
+          ./scripts/build-thorvg.sh
+
+      - name: Export include/lib paths for Thorvg
+        run: |
+          # Ajustar si la ruta de build difiere
+          if [ -d "third_party/thorvg/build" ]; then
+            echo "CPATH=$(pwd)/third_party/thorvg/include" >> $GITHUB_ENV
+            echo "LIBRARY_PATH=$(pwd)/third_party/thorvg/build" >> $GITHUB_ENV
+            echo "LD_LIBRARY_PATH=$(pwd)/third_party/thorvg/build" >> $GITHUB_ENV
+          fi
 
       - name: Install Zig
         run: |
@@ -37,6 +47,10 @@ jobs:
           echo "ZIG=$(pwd)/zig-linux-x86_64-0.11.0" >> $GITHUB_ENV
 
       - name: Build with Zig
+        env:
+          CPATH: ${{ env.CPATH }}
+          LIBRARY_PATH: ${{ env.LIBRARY_PATH }}
+          LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}
         run: |
           $ZIG/bin/zig build
 
