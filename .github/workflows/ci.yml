@@ -1,0 +1,23 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          set -e
+          # Descarga una release de Zig (ajustar versión si es necesario)
+          ZIG_VER=0.11.0
+          curl -L -o zig.tar.xz "https://ziglang.org/download/0.11.0/zig-linux-x86_64-0.11.0.tar.xz"
+          tar -xf zig.tar.xz
+          echo "ZIG=$(pwd)/zig-linux-x86_64-0.11.0" >> $GITHUB_ENV
+      - name: Build with Zig
+        run: |
+          $ZIG/bin/zig build
