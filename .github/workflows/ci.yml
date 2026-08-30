@@ -22,7 +22,6 @@ jobs:
           else
             echo "third_party/thorvg exists"
           fi
-          # Attempt a submodule init/update as well
           git submodule sync --recursive || true
           git submodule update --init --recursive || true
 
@@ -43,7 +42,6 @@ jobs:
 
       - name: Export include/lib paths for Thorvg
         run: |
-          # Ajustar si la ruta de build difiere
           if [ -d "third_party/thorvg/build" ]; then
             echo "CPATH=$(pwd)/third_party/thorvg/include" >> $GITHUB_ENV
             echo "LIBRARY_PATH=$(pwd)/third_party/thorvg/build" >> $GITHUB_ENV
@@ -54,16 +52,23 @@ jobs:
         run: |
           set -e
           ZIG_VER=0.11.0
-          curl -L -o zig.tar.xz "https://ziglang.org/download/0.11.0/zig-linux-x86_64-0.11.0.tar.xz"
-          tar -xf zig.tar.xz
-          echo "ZIG=$(pwd)/zig-linux-x86_64-0.11.0" >> $GITHUB_ENV
+          ZIG_FILE="zig-linux-x86_64-${ZIG_VER}.tar.xz"
+          echo "Downloading $ZIG_FILE"
+          curl -L -o "$ZIG_FILE" "https://ziglang.org/download/${ZIG_VER}/${ZIG_FILE}"
+          echo "Extracting $ZIG_FILE"
+          tar -xf "$ZIG_FILE"
+          ZIG_DIR=$(tar -tf "$ZIG_FILE" | head -1 | cut -f1 -d"/")
+          echo "Detected Zig directory: $ZIG_DIR"
+          echo "ZIG=$(pwd)/$ZIG_DIR" >> $GITHUB_ENV
 
       - name: Build with Zig
         env:
           CPATH: ${{ env.CPATH }}
           LIBRARY_PATH: ${{ env.LIBRARY_PATH }}
           LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}
+          ZIG: ${{ env.ZIG }}
         run: |
+          echo "Using ZIG at $ZIG"
           $ZIG/bin/zig build
 
       - name: List artifacts
